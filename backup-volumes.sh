@@ -157,7 +157,7 @@ run_setup() {
     mkdir -p "$(dirname "$CONFIG_FILE")"
     {
         echo "# DABV volume config — generated $(date '+%Y-%m-%d %H:%M')"
-        echo "# Re-run: sudo bash backup-volumes.sh --setup"
+        echo "# Re-run: bash backup-volumes.sh --setup"
         echo "volumes:"
         for i in "${!SELECTED_VOLS[@]}"; do
             echo "  - name: ${SELECTED_VOLS[$i]}"
