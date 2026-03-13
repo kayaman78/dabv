@@ -23,7 +23,7 @@ Docker volumes are not filesystem paths — you cannot back them up directly wit
 
 **Do not use DABV for:**
 - Bind mounts (host directories — restic handles those directly)
-- Database data directories covered by KDD (`postgres_data`, `mysql_data`, `mongo_data`) — add them to `EXCLUDED_VOLUMES`
+- Database data directories covered by KDD (`postgres_data`, `mysql_data`, `mongo_data`) — simply skip them during `--setup`
 
 ---
 
@@ -41,56 +41,69 @@ Docker volumes are not filesystem paths — you cannot back them up directly wit
 
 ## Quick Start
 
-### 1. Find your volumes
+### 1. Deploy the script
+
+Copy `backup-volumes.sh` to your server and set `CONFIG_FILE`, `BACKUP_ROOT`, and notification settings at the top:
 
 ```bash
-# List all named volumes
-docker volume ls
-
-# Find which container uses a specific volume
-docker ps --format '{{.Names}}' | xargs -I{} docker inspect {} \
-  --format '{{.Name}}: {{range .Mounts}}{{if eq .Type "volume"}}{{.Name}} {{end}}{{end}}'
+mkdir -p /srv/docker/dabv
+cp backup-volumes.sh /srv/docker/dabv/
 ```
 
-### 2. Configure the script
+No root required — the script runs as any user in the `docker` group. Dependencies (`swaks`, `curl`) must be installed beforehand if not running as root.
 
-Copy `backup-volumes.sh` to your server (e.g. `/srv/docker/dabv/`) and edit the top section:
+### 2. Run setup
 
 ```bash
-VOLUME_JOBS=(
-    "loki_data|loki-loki-1|yes"
-    "grafana_data|monitoring-grafana-1|no"
-    "gitea_data|gitea-server-1|no"
-)
-
-EXCLUDED_VOLUMES=("postgres_data" "mysql_data" "mongo_data")
+bash /srv/docker/dabv/backup-volumes.sh --setup
 ```
 
-Each job is `"volume_name|container_name|stop_required"`:
+The wizard scans all named Docker volumes on the host. For each one it shows the volume name, the container using it, and the image. Volumes from known database images (postgres, mysql, mariadb, mongo, redis, timescaledb, postgis) are flagged with a warning — you still decide. Two questions per volume:
 
-| Field | Description |
-|-------|-------------|
-| `volume_name` | Exact name from `docker volume ls` |
-| `container_name` | Container to stop/start — from `docker ps --format '{{.Names}}'`. Use `none` if stop not needed |
-| `stop_required` | `yes` = stop before backup, `no` = backup while running |
+- **Include in backup?** `[Y/n]`
+- **Stop container before backup?** `[Y/n]` — default is **yes**
 
-### 3. Test with dry run
+At the end it writes `volumes.yaml` to `CONFIG_FILE`.
+
+### 3. Review the config
 
 ```bash
-# Set DRY_RUN="on" at the top of the script, then:
-sudo bash /srv/docker/dabv/backup-volumes.sh
+cat /srv/docker/dabv/volumes.yaml
 ```
 
-Dry run scans and reports without creating any files or stopping any containers.
+```yaml
+# DABV volume config — generated 2025-01-15 10:30
+# Re-run: bash backup-volumes.sh --setup
+volumes:
+  - name: loki_data
+    container: loki-loki-1
+    stop: yes
+  - name: grafana_data
+    container: monitoring-grafana-1
+    stop: no
+  - name: myapp_uploads
+    container: myapp-app-1
+    stop: yes
+```
 
-### 4. Run via KCR
+Edit this file directly anytime to add, remove, or change entries without re-running setup.
 
-In Komodo, add a KCR Action that calls the script:
+### 4. Test with dry run
+
+```bash
+DRY_RUN=on bash /srv/docker/dabv/backup-volumes.sh
+```
+
+Reads the config and logs what it would do — no archives created, no containers stopped.
+
+### 5. Schedule via KCR
+
+In Komodo, add a KCR Action:
 
 ```json
 {
   "server_name": "prod-server-01",
-  "commands": ["sudo bash /srv/docker/dabv/backup-volumes.sh"]
+  "commands": ["bash /srv/docker/dabv/backup-volumes.sh"]
 }
 ```
 
@@ -100,8 +113,8 @@ In Komodo, add a KCR Action that calls the script:
 
 | Mode | When to use |
 |------|-------------|
-| `stop_required: yes` | Service writes actively to the volume and a mid-write snapshot would be inconsistent (e.g. Loki, databases not covered by KDD) |
-| `stop_required: no` | Volume contains static or append-only data, or the service tolerates a hot snapshot (e.g. Grafana dashboards, config files, static assets) |
+| `stop: yes` | Service writes actively to the volume and a mid-write snapshot would be inconsistent (e.g. Loki, databases not covered by KDD) |
+| `stop: no` | Volume contains static or append-only data, or the service tolerates a hot snapshot (e.g. Grafana dashboards, config files, static assets) |
 
 When in doubt, use `yes`. The downtime is brief — only as long as the tar operation.
 
@@ -175,11 +188,13 @@ This way:
 ### v1.0
 - Initial release
 - Named volume backup via temporary Alpine container (read-only mount)
-- Stop/hot backup modes per volume
+- Interactive `--setup` wizard: scans volumes, flags DB images, writes `volumes.yaml`
+- Stop/hot backup mode per volume — default stop, configurable per entry
 - Three-step verification: gzip integrity, tar structure, size trend
 - Retention for backups and logs
 - HTML email report with Volume / Mode / Size / Backup / Verify columns
 - Telegram and ntfy push notifications
+- No root required if user is in the `docker` group and deps are pre-installed
 
 ---
 
