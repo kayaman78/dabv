@@ -80,16 +80,7 @@ run_setup() {
     read -r -p "Press Enter to start scanning..."
     echo ""
 
-    if ! command -v yq &>/dev/null; then
-        if [ "$EUID" -eq 0 ]; then
-            echo "⚙️  Installing yq..."
-            apt-get update -qq && apt-get install -y -qq yq
-        else
-            echo "❌ ERROR: 'yq' is required but not installed."
-            echo "   Install manually: sudo apt-get install -y yq"
-            exit 1
-        fi
-    fi
+
 
     # Build map: volume_name → container name + image
     declare -A VOL_CONTAINER
@@ -220,7 +211,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
 fi
 
 # Check dependencies — auto-install if root, warn and exit if not
-declare -A DEP_MAP=([yq]="yq" [swaks]="swaks" [curl]="curl")
+declare -A DEP_MAP=([swaks]="swaks" [curl]="curl")
 MISSING_PKGS=()
 for cmd in "${!DEP_MAP[@]}"; do
     command -v "$cmd" &>/dev/null || MISSING_PKGS+=("${DEP_MAP[$cmd]}")
@@ -366,18 +357,26 @@ send_ntfy() {
 
 # ==============================================================================
 # MAIN — read config and process each volume
+# Pure bash YAML parser — no yq dependency required.
+# Works with the fixed format written by --setup.
 # ==============================================================================
-VOL_COUNT=$(yq e '.volumes | length' "$CONFIG_FILE")
+
+# Extract all volume blocks into parallel arrays
+mapfile -t _NAMES      < <(awk '/^  - name:/{print $3}'      "$CONFIG_FILE")
+mapfile -t _CONTAINERS < <(awk '/^    container:/{print $2}' "$CONFIG_FILE")
+mapfile -t _STOPS      < <(awk '/^    stop:/{print $2}'      "$CONFIG_FILE")
+
+VOL_COUNT=${#_NAMES[@]}
 
 if [ "$VOL_COUNT" -eq 0 ]; then
-    echo "[!] No volumes in config. Run: sudo bash backup-volumes.sh --setup"
+    echo "[!] No volumes in config. Run: bash backup-volumes.sh --setup"
     exit 0
 fi
 
 for i in $(seq 0 $((VOL_COUNT - 1))); do
-    VOL_NAME=$(yq      e ".volumes[$i].name"      "$CONFIG_FILE")
-    CONTAINER=$(yq     e ".volumes[$i].container"  "$CONFIG_FILE")
-    STOP_REQUIRED=$(yq e ".volumes[$i].stop"       "$CONFIG_FILE")
+    VOL_NAME="${_NAMES[$i]}"
+    CONTAINER="${_CONTAINERS[$i]}"
+    STOP_REQUIRED="${_STOPS[$i]}"
 
     echo ""
     echo "[*] 🗄️  Volume: $VOL_NAME (container: $CONTAINER, stop: $STOP_REQUIRED)"
