@@ -425,11 +425,11 @@ for i in $(seq 0 $((VOL_COUNT - 1))); do
         fi
     fi
 
-    # Backup via alpine
+    # Backup via alpine — --pull always ensures the latest image is used
     echo "    📦 Backing up: $VOL_NAME"
     BACKUP_OK=false
 
-    if docker run --rm \
+    if docker run --rm --pull always \
         -v "${VOL_NAME}:/source:ro" \
         -v "${DEST_DIR}:/backup" \
         alpine \
