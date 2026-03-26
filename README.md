@@ -226,6 +226,9 @@ Download the new version alongside the old one, diff them to see only what chang
 
 ## Changelog
 
+### v1.3
+- Fixed `build_text_summary()` in dry-run mode — push notifications (Telegram/ntfy) were showing `0✅ 0❌ (total: 0)` instead of dry-run info; now show `🔍 DABV DRY-RUN — N volume(s) scanned. No backups written.`
+
 ### v1.2
 - Fixed dry-run mode: retention phase was executing `rm -f` even with `DRY_RUN=on`, deleting real backups and logs while reporting "no backup written"
 - Dry-run now shows a preview of what retention would remove without touching anything

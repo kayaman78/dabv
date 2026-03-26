@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # DABV — Docker Automated Backup for Volumes
-# Version: 1.0
+# Version: 1.3
 # Platform: Debian / Ubuntu
 # https://github.com/kayaman78/dabv
 # ==============================================================================
@@ -287,6 +287,12 @@ verify_volume_backup() {
 # NOTIFICATION FUNCTIONS
 # ==============================================================================
 build_text_summary() {
+    if [ "$DRY_RUN" == "on" ]; then
+        printf "🔍 DABV DRY-RUN — %s | %s\n%d volume(s) scanned. No backups written." \
+            "$HOSTNAME" "$DATE_LABEL" "$COUNT_DRY"
+        return
+    fi
+
     local icon="✅"
     [ $COUNT_ERR -gt 0 ]                                  && icon="❌"
     [ $COUNT_ERR -eq 0 ] && [ $COUNT_VERIFY_WARN -gt 0 ] && icon="⚠️"
