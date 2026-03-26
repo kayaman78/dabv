@@ -183,6 +183,47 @@ This way:
 
 ---
 
+## Updating
+
+The script logic and your configuration live in the same file (`backup-volumes.sh`). Your volume list lives separately in `volumes.yaml` and is never touched by an update.
+
+**1. Save your current configuration**
+
+Your settings are at the top of the script (everything above the `KNOWN DATABASE IMAGES` block). Copy that section before replacing the file.
+
+**2. Replace the script**
+
+```bash
+curl -sL https://raw.githubusercontent.com/kayaman78/dabv/main/backup-volumes.sh \
+  -o /srv/docker/dabv/backup-volumes.sh
+```
+
+**3. Re-apply your settings**
+
+Paste your configuration block back at the top of the new script. Your `volumes.yaml` is untouched.
+
+---
+
+### Updating from Komodo (recommended)
+
+Create a KCR Action to handle the download step on each server:
+
+```json
+{
+  "server_name": "your-server",
+  "commands": [
+    "cp /srv/docker/dabv/backup-volumes.sh /srv/docker/dabv/backup-volumes.sh.bak",
+    "curl -sL https://raw.githubusercontent.com/kayaman78/dabv/main/backup-volumes.sh -o /srv/docker/dabv/backup-volumes.sh.new"
+  ]
+}
+```
+
+Download the new version alongside the old one, diff them to see only what changed (see the [Changelog](#changelog)), and apply the code changes manually — your configuration block and `volumes.yaml` stay untouched.
+
+> **Tip**: Duplicate this Action for each server you manage, changing only `server_name`.
+
+---
+
 ## Changelog
 
 ### v1.1
