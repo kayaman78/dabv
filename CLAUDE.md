@@ -24,10 +24,10 @@ bash backup-volumes.sh             # backup production
 
 **Backup phase:**
 1. Legge `volumes.yaml` via parser YAML puro bash (no yq required)
-2. Per ogni volume: (se `stop: yes`) docker stop → `docker run alpine tar czf` con volume montato read-only → docker start
-3. Verifica 3-step
-4. Retention cleanup con `-mtime +"$((RETENTION_DAYS - 1))"`
-5. Notifiche
+2. Per ogni volume: (se `stop: yes`) docker stop → `docker run alpine tar czf` con volume montato read-only → docker start. In DRY_RUN: skip tutto, incrementa `COUNT_DRY`.
+3. Verifica 3-step. `verify_volume_backup()` ritorna `return 1` su FAIL (oltre all'echo "FAIL:...").
+4. Retention cleanup con `-mtime +"$((RETENTION_DAYS - 1))"`. In DRY_RUN: solo preview, nessuna cancellazione.
+5. Notifiche. `build_text_summary()` ha branch DRY_RUN che usa `$COUNT_DRY`.
 
 ## Verifica 3-step
 1. `gzip -t` — integrità archivio

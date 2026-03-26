@@ -1,6 +1,6 @@
 # DABV — Docker Automated Backup for Volumes
 
-**Project Status**: Active | **Version**: 1.2 | **Maintained**: Yes
+**Project Status**: Active | **Version**: 1.4 | **Maintained**: Yes
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/platform-Debian%20%2F%20Ubuntu-blue)](https://ubuntu.com/)
