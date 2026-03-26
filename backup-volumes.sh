@@ -200,10 +200,6 @@ LOG_FILE="$LOG_DIR/backup-volumes_$(date +%Y%m%d).log"
 touch "$LOG_FILE"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
-if ! command -v docker &>/dev/null; then
-    echo "FATAL ERROR: 'docker' not found. Cannot continue." >&2; exit 1
-fi
-
 if [ ! -f "$CONFIG_FILE" ]; then
     echo "❌ ERROR: Config file not found: $CONFIG_FILE"
     echo "   Run setup first: sudo bash backup-volumes.sh --setup"
@@ -211,7 +207,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
 fi
 
 # Check dependencies — auto-install if root, warn and exit if not
-declare -A DEP_MAP=([swaks]="swaks" [curl]="curl")
+declare -A DEP_MAP=([swaks]="swaks" [curl]="curl" [gzip]="gzip")
 MISSING_PKGS=()
 for cmd in "${!DEP_MAP[@]}"; do
     command -v "$cmd" &>/dev/null || MISSING_PKGS+=("${DEP_MAP[$cmd]}")

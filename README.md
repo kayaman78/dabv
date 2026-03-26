@@ -1,6 +1,6 @@
 # DABV — Docker Automated Backup for Volumes
 
-**Project Status**: Active | **Version**: 1.0 | **Maintained**: Yes
+**Project Status**: Active | **Version**: 1.1 | **Maintained**: Yes
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/platform-Debian%20%2F%20Ubuntu-blue)](https://ubuntu.com/)
@@ -50,7 +50,7 @@ mkdir -p /srv/docker/dabv
 cp backup-volumes.sh /srv/docker/dabv/
 ```
 
-No root required — the script runs as any user in the `docker` group. Dependencies (`swaks`, `curl`) must be installed beforehand if not running as root.
+No root required — the script runs as any user in the `docker` group. Dependencies (`swaks`, `curl`, `gzip`) must be installed beforehand if not running as root.
 
 ### 2. Run setup
 
@@ -184,6 +184,11 @@ This way:
 ---
 
 ## Changelog
+
+### v1.1
+- Fixed missing `gzip` dependency — `gzip -t` is used in backup verification but was not checked or auto-installed
+- Removed redundant `docker` availability check that ran after it was already confirmed working
+- Added `gzip` to the dependency list in documentation
 
 ### v1.0
 - Initial release
