@@ -1,6 +1,6 @@
 # DABV — Docker Automated Backup for Volumes
 
-**Project Status**: Active | **Version**: 1.1 | **Maintained**: Yes
+**Project Status**: Active | **Version**: 1.2 | **Maintained**: Yes
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/platform-Debian%20%2F%20Ubuntu-blue)](https://ubuntu.com/)
@@ -225,6 +225,11 @@ Download the new version alongside the old one, diff them to see only what chang
 ---
 
 ## Changelog
+
+### v1.2
+- Fixed dry-run mode: retention phase was executing `rm -f` even with `DRY_RUN=on`, deleting real backups and logs while reporting "no backup written"
+- Dry-run now shows a preview of what retention would remove without touching anything
+- Email report in dry-run mode includes a retention preview line when files would be affected
 
 ### v1.1
 - Fixed missing `gzip` dependency — `gzip -t` is used in backup verification but was not checked or auto-installed
