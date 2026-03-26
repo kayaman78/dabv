@@ -226,6 +226,9 @@ Download the new version alongside the old one, diff them to see only what chang
 
 ## Changelog
 
+### v1.4
+- Fixed `verify_volume_backup()` — `return` on FAIL branches was missing the exit code argument (`return 1`), causing the function to always signal success to the shell even when a FAIL was emitted; result capture via `$()` was unaffected but exit code contract was wrong
+
 ### v1.3
 - Fixed `build_text_summary()` in dry-run mode — push notifications (Telegram/ntfy) were showing `0✅ 0❌ (total: 0)` instead of dry-run info; now show `🔍 DABV DRY-RUN — N volume(s) scanned. No backups written.`
 

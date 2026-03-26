@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # DABV — Docker Automated Backup for Volumes
-# Version: 1.3
+# Version: 1.4
 # Platform: Debian / Ubuntu
 # https://github.com/kayaman78/dabv
 # ==============================================================================
@@ -254,11 +254,11 @@ verify_volume_backup() {
     local warn_msg=""
 
     if ! gzip -t "$gz_file" 2>/dev/null; then
-        echo "FAIL:gzip corrupt"; return
+        echo "FAIL:gzip corrupt"; return 1
     fi
 
     if ! tar tzf "$gz_file" > /dev/null 2>&1; then
-        echo "FAIL:tar structure invalid"; return
+        echo "FAIL:tar structure invalid"; return 1
     fi
 
     local curr_size prev_file prev_size threshold
